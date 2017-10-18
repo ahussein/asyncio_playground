@@ -1,0 +1,31 @@
+"""
+In addition to working like a coroutine, a Future can invoke callbacks when it is completed. 
+Callbacks are invoked in the order they are registered.
+"""
+
+import asyncio
+import functools
+
+
+def callback(future, n):
+    print('{}: future done: {}'.format(n, future.result()))
+
+
+async def register_callbacks(all_done):
+    print('registering callbacks on future')
+    all_done.add_done_callback(functools.partial(callback, n=1))
+    all_done.add_done_callback(functools.partial(callback, n=2))
+
+
+async def main(all_done):
+    await register_callbacks(all_done)
+    print('setting result of future')
+    all_done.set_result('the result')
+
+evl = asyncio.get_event_loop()
+try:
+    all_done = asyncio.Future()
+    evl.run_until_complete(main(all_done))
+
+finally:
+    evl.close()
